@@ -62,8 +62,11 @@ class TaskCallingModel(nn.Module):
         for param in self.model.parameters():
             param.requires_grad = False
         
+        # Get hidden size from config
+        self.hidden_size = getattr(self.config, "hidden_size", self.model.config.hidden_size)
+        
         # Get original embedding parameters for initialization
-        original_embeddings = self.model.model.embed_tokens.weight.data
+        original_embeddings = self.model.get_input_embeddings().weight.data
         
         # Create trainable parameters for task tokens (coupled or decoupled)
         # Clone the embeddings for the reserved tokens and make them parameters
@@ -73,15 +76,15 @@ class TaskCallingModel(nn.Module):
         if self.decouple_embeddings:
             # Separate parameters for input and output layers
             self.trainable_task_input_embeddings = nn.Parameter(
-                original_embeddings[self.reserved_token_tensor].clone()
+                original_embeddings[self.reserved_token_tensor].clone().to(dtype=dtype)
             )
             self.trainable_task_output_embeddings = nn.Parameter(
-                original_embeddings[self.reserved_token_tensor].clone()
+                original_embeddings[self.reserved_token_tensor].clone().to(dtype=dtype)
             )
         else:
             # Shared parameter for both input and output layers
             self.trainable_task_embeddings = nn.Parameter(
-                original_embeddings[self.reserved_token_tensor].clone()
+                original_embeddings[self.reserved_token_tensor].clone().to(dtype=dtype)
             )
             # Create aliases for backward compatibility
             self.trainable_task_input_embeddings = self.trainable_task_embeddings

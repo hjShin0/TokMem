@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
-Custom training pipeline for Weather Task
-Converts custom JSON data into the task-based learning format.
+Custom training pipeline for skill tasks.
+Loads every *.json file under a skills directory (one task per file) and
+converts the items into the task-based learning format.
 """
 
 import torch
@@ -11,7 +12,8 @@ import os
 import random
 import numpy as np
 import json
-from typing import List, Dict
+from pathlib import Path
+from typing import List, Dict, Tuple
 
 # Import our custom modules
 from task_model import TaskCallingModel, print_model_info
@@ -27,47 +29,74 @@ from task_training import (
     setup_logging
 )
 
-def load_custom_weather_data(json_path: str):
+def load_skill_datasets(data_dir: str) -> Tuple[List[Dict], List[str]]:
     """
-    Load weather data and convert it to the required format:
-    instruction: "Using get_weather function, get correct result with given location and time"
-    query: {user_query}
-    tasks: ["weatherTask"]
-    responses: {trajectory}
-    """
-    if not os.path.exists(json_path):
-        raise FileNotFoundError(f"Data file not found: {json_path}")
-    
-    with open(json_path, 'r', encoding='utf-8') as f:
-        raw_data = json.load(f)
-    
-    formatted_data = []
-    
-    def process_item(item):
-        if isinstance(item, list):
-            for sub_item in item:
-                process_item(sub_item)
-            return
+    Load every *.json file under ``data_dir`` and convert each item into the
+    task-based learning format. The filename (without ``.json``) becomes the
+    task name.
 
-        if 'user_query' in item and 'trajectory' in item:
-            # Handle trajectory as string if it's a dict/list
-            trajectory = item['trajectory']
-            if not isinstance(trajectory, str):
-                trajectory = json.dumps(trajectory, ensure_ascii=False)
-            
-            sample = {
-                'instruction': "Using get_weather function, get correct result with given location and time",
-                'query': item['user_query'],
-                'tasks': ["weatherTask"],
-                'responses': [trajectory]
+    Each input item is expected to look like::
+
+        {"query": "...", "function_name": "...", "arguments": {...}}
+
+    and is converted into::
+
+        {
+            "instruction": f"Using {task_name} functions, get correct result with given query",
+            "query":       item["query"],
+            "tasks":       [task_name],
+            "responses":   [json.dumps({"function_name": ..., "arguments": ...}, ensure_ascii=False)],
+        }
+
+    Returns (formatted_data, task_names) where ``task_names`` is sorted & deduped.
+    """
+    data_path = Path(data_dir)
+    if not data_path.is_dir():
+        raise FileNotFoundError(f"Skill dataset directory not found: {data_dir}")
+
+    json_files = sorted(data_path.glob('*.json'))
+    if not json_files:
+        raise FileNotFoundError(f"No *.json files found in {data_dir}")
+
+    formatted_data: List[Dict] = []
+    task_names: List[str] = []
+
+    for json_file in json_files:
+        task_name = json_file.stem
+        task_names.append(task_name)
+        instruction = f"Using {task_name} functions, get correct result with given query"
+
+        with open(json_file, 'r', encoding='utf-8') as f:
+            raw_items = json.load(f)
+
+        if not isinstance(raw_items, list):
+            print(f"⚠️  {json_file.name}: top-level JSON is not a list — skipping")
+            continue
+
+        count = 0
+        for item in raw_items:
+            if not isinstance(item, dict):
+                continue
+            if 'query' not in item or 'function_name' not in item:
+                continue
+
+            response_obj = {
+                "function_name": item['function_name'],
+                "arguments": item.get('arguments', {}),
             }
-            print(sample)
+            sample = {
+                'instruction': instruction,
+                'query': item['query'],
+                'tasks': [task_name],
+                'responses': [json.dumps(response_obj, ensure_ascii=False)],
+            }
             formatted_data.append(sample)
+            count += 1
 
-    process_item(raw_data)
-    
-    print(f"✅ Loaded and formatted {len(formatted_data)} weather samples.")
-    return formatted_data
+        print(f"   - {json_file.name}: {count} sample(s) loaded as task '{task_name}'")
+
+    print(f"✅ Loaded and formatted {len(formatted_data)} samples across {len(json_files)} task file(s).")
+    return formatted_data, sorted(set(task_names))
 
 def add_reserved_special_tokens(tokenizer, num_of_tasks):
     """Add reserved special tokens to the tokenizer"""
@@ -97,12 +126,11 @@ def set_random_seed(seed):
 def main():
     # Detect script directory for relative path resolution (useful in WSL/Linux)
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    # Go up one level to TokMem/ and then to skill_data_generation/...
-    default_data_path = os.path.join(script_dir, "..", "..", "skill_data_generation", "skills", "weather", "train_data.json")
-    
-    parser = argparse.ArgumentParser(description='Custom Weather Task Learning')
-    parser.add_argument('--data_path', type=str, default=default_data_path, 
-                        help='Path to weather train_data.json')
+    default_data_dir = os.path.join(script_dir, "..", "skills", "generated_datasets")
+
+    parser = argparse.ArgumentParser(description='Custom Skill Task Learning')
+    parser.add_argument('--data_dir', type=str, default=default_data_dir,
+                        help='Directory containing skill dataset JSON files (one task per file)')
     parser.add_argument('--model_name', type=str, default="meta-llama/Llama-3.2-3B", 
                         help='HuggingFace model name')
     parser.add_argument('--batch_size', type=int, default=1, help='Training batch size')
@@ -127,12 +155,10 @@ def main():
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.bos_token
     
-    # We only have one task: "weatherTask"
-    task_names = ["weatherTask"]
+    # Load and format data — task names are derived from JSON filenames
+    full_data, task_names = load_skill_datasets(args.data_dir)
+    print(f"📚 Discovered {len(task_names)} task(s): {task_names}")
     tokenizer, is_extended = add_reserved_special_tokens(tokenizer, len(task_names))
-    
-    # Load and format data
-    full_data = load_custom_weather_data(args.data_path)
     
     # Split data
     random.shuffle(full_data)
@@ -182,7 +208,7 @@ def main():
     )
     
     print(f"Training completed. Avg loss: {train_results['avg_total_loss']:.4f}")
-    print("\nCustom weather task learning pipeline completed!")
+    print("\nCustom skill task learning pipeline completed!")
 
 if __name__ == "__main__":
     main()

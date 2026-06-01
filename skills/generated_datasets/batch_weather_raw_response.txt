@@ -1,0 +1,993 @@
+```json
+{
+  "com.argo.weather": [
+    {
+      "query": "What's the weather like in London right now?",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "London",
+        "time": "now"
+      }
+    },
+    {
+      "query": "Tell me the forecast for Paris tomorrow.",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Paris",
+        "time": "tomorrow",
+        "forecast_days": 1
+      }
+    },
+    {
+      "query": "Is it going to rain in Tokyo today?",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Tokyo",
+        "time": "today"
+      }
+    },
+    {
+      "query": "What's the temperature in New York City on January 15th, 2025?",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "New York",
+        "time": "2025-01-15"
+      }
+    },
+    {
+      "query": "Give me a 3-day weather forecast for Berlin.",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Berlin",
+        "time": "today",
+        "forecast_days": 3
+      }
+    },
+    {
+      "query": "Will there be snow in Moscow this weekend?",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Moscow",
+        "time": "this weekend"
+      }
+    },
+    {
+      "query": "What's the weather like at 51.5, -0.12?",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "51.5,-0.12",
+        "time": "now"
+      }
+    },
+    {
+      "query": "I need the weather for Sydney, Australia for next Tuesday.",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Sydney,Australia",
+        "time": "next Tuesday"
+      }
+    },
+    {
+      "query": "How cold will it be in Rome on Christmas day?",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Rome",
+        "time": "2024-12-25"
+      }
+    },
+    {
+      "query": "What's the current humidity in Mumbai?",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Mumbai",
+        "time": "now"
+      }
+    },
+    {
+      "query": "Get me the weather forecast for the next 2 days in Los Angeles.",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Los Angeles",
+        "time": "today",
+        "forecast_days": 2
+      }
+    },
+    {
+      "query": "Is it sunny in Cairo?",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Cairo",
+        "time": "now"
+      }
+    },
+    {
+      "query": "What will the weather be like in Beijing on June 1st?",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Beijing",
+        "time": "2024-06-01"
+      }
+    },
+    {
+      "query": "Tell me the weather in Istanbul for the upcoming Friday.",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Istanbul",
+        "time": "upcoming Friday"
+      }
+    },
+    {
+      "query": "What's the temperature expected in Vancouver next week?",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Vancouver",
+        "time": "next week"
+      }
+    },
+    {
+      "query": "I need the weather for the specific coordinates 40.7128,-74.0060 today.",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "40.7128,-74.0060",
+        "time": "today"
+      }
+    },
+    {
+      "query": "How's the weather in the Swiss Alps right now?",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Swiss Alps",
+        "time": "now"
+      }
+    },
+    {
+      "query": "What's the forecast for the next 24 hours in Dublin?",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Dublin",
+        "time": "now",
+        "forecast_days": 1
+      }
+    },
+    {
+      "query": "Will it be hot in Dubai this Saturday?",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Dubai",
+        "time": "this Saturday"
+      }
+    },
+    {
+      "query": "What's the weather in Mexico City on my birthday, which is July 20th?",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Mexico City",
+        "time": "2024-07-20"
+      }
+    },
+    {
+      "query": "Show me the weather for tomorrow in Seoul.",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Seoul",
+        "time": "tomorrow"
+      }
+    },
+    {
+      "query": "What's the current temperature in San Francisco?",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "San Francisco",
+        "time": "now"
+      }
+    },
+    {
+      "query": "I want to know the weather forecast for Amsterdam for the next 3 days.",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Amsterdam",
+        "time": "today",
+        "forecast_days": 3
+      }
+    },
+    {
+      "query": "Will there be fog in London tomorrow morning?",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "London",
+        "time": "tomorrow morning"
+      }
+    },
+    {
+      "query": "What's the weather like in Rio de Janeiro on December 31st?",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Rio de Janeiro",
+        "time": "2024-12-31"
+      }
+    },
+    {
+      "query": "Get the weather for 34.0522,-118.2437 for today.",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "34.0522,-118.2437",
+        "time": "today"
+      }
+    },
+    {
+      "query": "Is it going to be cold in Moscow next week?",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Moscow",
+        "time": "next week"
+      }
+    },
+    {
+      "query": "What's the weather forecast for Chicago for the next two days?",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Chicago",
+        "time": "today",
+        "forecast_days": 2
+      }
+    },
+    {
+      "query": "Tell me the current weather in Sydney.",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Sydney",
+        "time": "now"
+      }
+    },
+    {
+      "query": "What's the temperature in Toronto on August 1st?",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Toronto",
+        "time": "2024-08-01"
+      }
+    },
+    {
+      "query": "Give me the weather for Berlin for the next 3 days.",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Berlin",
+        "time": "today",
+        "forecast_days": 3
+      }
+    },
+    {
+      "query": "Will it rain in Seattle this weekend?",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Seattle",
+        "time": "this weekend"
+      }
+    },
+    {
+      "query": "What's the weather like in Rome right now?",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Rome",
+        "time": "now"
+      }
+    },
+    {
+      "query": "I need the weather for Madrid for tomorrow.",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Madrid",
+        "time": "tomorrow"
+      }
+    },
+    {
+      "query": "Show me the forecast for New York for the next 24 hours.",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "New York",
+        "time": "now",
+        "forecast_days": 1
+      }
+    },
+    {
+      "query": "What's the temperature in Tokyo on March 10th?",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Tokyo",
+        "time": "2025-03-10"
+      }
+    },
+    {
+      "query": "Get the weather for 48.8566,2.3522 for the next 3 days.",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "48.8566,2.3522",
+        "time": "today",
+        "forecast_days": 3
+      }
+    },
+    {
+      "query": "Is it going to be windy in London on Friday?",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "London",
+        "time": "Friday"
+      }
+    },
+    {
+      "query": "What's the weather forecast for Paris for the whole week?",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Paris",
+        "time": "today",
+        "forecast_days": 3
+      }
+    },
+    {
+      "query": "Tell me the current weather in Los Angeles.",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Los Angeles",
+        "time": "now"
+      }
+    },
+    {
+      "query": "What's the temperature in Berlin tomorrow?",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Berlin",
+        "time": "tomorrow"
+      }
+    },
+    {
+      "query": "I need the weather for Rome for the next 2 days.",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Rome",
+        "time": "today",
+        "forecast_days": 2
+      }
+    },
+    {
+      "query": "Will there be sunshine in Sydney on Sunday?",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Sydney",
+        "time": "Sunday"
+      }
+    },
+    {
+      "query": "What's the weather like in Moscow on February 14th?",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Moscow",
+        "time": "2025-02-14"
+      }
+    },
+    {
+      "query": "Get the weather for 35.6895,139.6917 for today.",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "35.6895,139.6917",
+        "time": "today"
+      }
+    },
+    {
+      "query": "Is it going to snow in New York City this December?",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "New York",
+        "time": "this December"
+      }
+    },
+    {
+      "query": "What's the weather forecast for Tokyo for the next 3 days?",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Tokyo",
+        "time": "today",
+        "forecast_days": 3
+      }
+    },
+    {
+      "query": "Tell me the current weather in Istanbul.",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Istanbul",
+        "time": "now"
+      }
+    },
+    {
+      "query": "What's the temperature in Chicago on July 4th?",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Chicago",
+        "time": "2024-07-04"
+      }
+    },
+    {
+      "query": "I need the weather for Amsterdam for tomorrow.",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Amsterdam",
+        "time": "tomorrow"
+      }
+    },
+    {
+      "query": "Will it be sunny in Rome on Saturday?",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Rome",
+        "time": "Saturday"
+      }
+    },
+    {
+      "query": "What's the weather like in Vancouver on my anniversary, October 1st?",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Vancouver",
+        "time": "2024-10-01"
+      }
+    },
+    {
+      "query": "Get the weather for 37.7749,-122.4194 for the next 2 days.",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "37.7749,-122.4194",
+        "time": "today",
+        "forecast_days": 2
+      }
+    },
+    {
+      "query": "Is it going to rain in Paris next Wednesday?",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Paris",
+        "time": "next Wednesday"
+      }
+    },
+    {
+      "query": "What's the weather forecast for London for the next 3 days?",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "London",
+        "time": "today",
+        "forecast_days": 3
+      }
+    },
+    {
+      "query": "Tell me the current weather in Beijing.",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Beijing",
+        "time": "now"
+      }
+    },
+    {
+      "query": "What's the temperature in Sydney on Christmas Eve?",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Sydney",
+        "time": "2024-12-24"
+      }
+    },
+    {
+      "query": "I need the weather for Tokyo for the next 24 hours.",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Tokyo",
+        "time": "now",
+        "forecast_days": 1
+      }
+    },
+    {
+      "query": "Will it be cold in Madrid next Monday?",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Madrid",
+        "time": "next Monday"
+      }
+    },
+    {
+      "query": "What's the weather like in Mumbai on New Year's Day?",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Mumbai",
+        "time": "2025-01-01"
+      }
+    },
+    {
+      "query": "Get the weather for 41.9028,12.4964 for today.",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "41.9028,12.4964",
+        "time": "today"
+      }
+    },
+    {
+      "query": "Is it going to be foggy in San Francisco tomorrow?",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "San Francisco",
+        "time": "tomorrow"
+      }
+    },
+    {
+      "query": "What's the weather forecast for New York for the next 3 days?",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "New York",
+        "time": "today",
+        "forecast_days": 3
+      }
+    },
+    {
+      "query": "Tell me the current weather in Rome.",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Rome",
+        "time": "now"
+      }
+    },
+    {
+      "query": "What's the temperature in Paris on my wedding anniversary, September 5th?",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Paris",
+        "time": "2024-09-05"
+      }
+    },
+    {
+      "query": "I need the weather for Berlin for next Friday.",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Berlin",
+        "time": "next Friday"
+      }
+    },
+    {
+      "query": "Will it be warm in Sydney next weekend?",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Sydney",
+        "time": "next weekend"
+      }
+    },
+    {
+      "query": "What's the weather like in Toronto on Valentine's Day?",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Toronto",
+        "time": "2025-02-14"
+      }
+    },
+    {
+      "query": "Get the weather for 31.2304,121.4737 for today.",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "31.2304,121.4737",
+        "time": "today"
+      }
+    },
+    {
+      "query": "Is it going to be rainy in London in July?",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "London",
+        "time": "this July"
+      }
+    },
+    {
+      "query": "What's the weather forecast for Chicago for the next 24 hours?",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Chicago",
+        "time": "now",
+        "forecast_days": 1
+      }
+    },
+    {
+      "query": "Tell me the current weather in Tokyo.",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Tokyo",
+        "time": "now"
+      }
+    },
+    {
+      "query": "What's the temperature in Moscow on my birthday, April 22nd?",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Moscow",
+        "time": "2025-04-22"
+      }
+    },
+    {
+      "query": "I need the weather for Paris for the next 3 days.",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Paris",
+        "time": "today",
+        "forecast_days": 3
+      }
+    },
+    {
+      "query": "Will there be hail in New York tomorrow?",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "New York",
+        "time": "tomorrow"
+      }
+    },
+    {
+      "query": "What's the weather like in Los Angeles on Thanksgiving?",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Los Angeles",
+        "time": "Thanksgiving"
+      }
+    },
+    {
+      "query": "Get the weather for 30.0444,31.2357 for today.",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "30.0444,31.2357",
+        "time": "today"
+      }
+    },
+    {
+      "query": "Is it going to be sunny in Berlin next Saturday?",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Berlin",
+        "time": "next Saturday"
+      }
+    },
+    {
+      "query": "What's the weather forecast for Sydney for the next 2 days?",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Sydney",
+        "time": "today",
+        "forecast_days": 2
+      }
+    },
+    {
+      "query": "Tell me the current weather in Madrid.",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Madrid",
+        "time": "now"
+      }
+    },
+    {
+      "query": "What's the temperature in Amsterdam on my graduation day, May 15th?",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Amsterdam",
+        "time": "2025-05-15"
+      }
+    },
+    {
+      "query": "I need the weather for Rome for the next 24 hours.",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Rome",
+        "time": "now",
+        "forecast_days": 1
+      }
+    },
+    {
+      "query": "Will it be windy in Istanbul tomorrow?",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Istanbul",
+        "time": "tomorrow"
+      }
+    },
+    {
+      "query": "What's the weather like in Beijing on National Day?",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Beijing",
+        "time": "National Day"
+      }
+    },
+    {
+      "query": "Get the weather for 22.3193,114.1694 for today.",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "22.3193,114.1694",
+        "time": "today"
+      }
+    },
+    {
+      "query": "Is it going to be cold in Tokyo in January?",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Tokyo",
+        "time": "this January"
+      }
+    },
+    {
+      "query": "What's the weather forecast for London for the next 24 hours?",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "London",
+        "time": "now",
+        "forecast_days": 1
+      }
+    },
+    {
+      "query": "Tell me the current weather in San Francisco.",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "San Francisco",
+        "time": "now"
+      }
+    },
+    {
+      "query": "What's the temperature in Paris on my sister's birthday, March 20th?",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Paris",
+        "time": "2025-03-20"
+      }
+    },
+    {
+      "query": "I need the weather for Chicago for tomorrow.",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Chicago",
+        "time": "tomorrow"
+      }
+    },
+    {
+      "query": "Will it rain in Rome this week?",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Rome",
+        "time": "this week"
+      }
+    },
+    {
+      "query": "What's the weather like in Vancouver on Canada Day?",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Vancouver",
+        "time": "Canada Day"
+      }
+    },
+    {
+      "query": "Get the weather for 39.9042,116.4074 for today.",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "39.9042,116.4074",
+        "time": "today"
+      }
+    },
+    {
+      "query": "Is it going to be hot in Sydney in February?",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Sydney",
+        "time": "this February"
+      }
+    },
+    {
+      "query": "What's the weather forecast for Moscow for the next 3 days?",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Moscow",
+        "time": "today",
+        "forecast_days": 3
+      }
+    },
+    {
+      "query": "Tell me the current weather in Amsterdam.",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Amsterdam",
+        "time": "now"
+      }
+    },
+    {
+      "query": "What's the temperature in Beijing on May Day?",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Beijing",
+        "time": "May Day"
+      }
+    },
+    {
+      "query": "I need the weather for Tokyo for the next 3 days.",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Tokyo",
+        "time": "today",
+        "forecast_days": 3
+      }
+    },
+    {
+      "query": "Will it snow in Rome next weekend?",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Rome",
+        "time": "next weekend"
+      }
+    },
+    {
+      "query": "What's the weather like in New York on the 4th of July?",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "New York",
+        "time": "July 4th"
+      }
+    },
+    {
+      "query": "Get the weather for 52.5200,13.4050 for today.",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "52.5200,13.4050",
+        "time": "today"
+      }
+    },
+    {
+      "query": "Is it going to be rainy in London next month?",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "London",
+        "time": "next month"
+      }
+    },
+    {
+      "query": "What's the weather forecast for Paris for the next 24 hours?",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Paris",
+        "time": "now",
+        "forecast_days": 1
+      }
+    },
+    {
+      "query": "Tell me the current weather in Los Angeles.",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Los Angeles",
+        "time": "now"
+      }
+    },
+    {
+      "query": "What's the temperature in Sydney on my graduation day, June 30th?",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Sydney",
+        "time": "2024-06-30"
+      }
+    },
+    {
+      "query": "I need the weather for Berlin for tomorrow.",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Berlin",
+        "time": "tomorrow"
+      }
+    },
+    {
+      "query": "Will it be sunny in Tokyo next Sunday?",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Tokyo",
+        "time": "next Sunday"
+      }
+    },
+    {
+      "query": "What's the weather like in Madrid on my birthday, September 10th?",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Madrid",
+        "time": "2024-09-10"
+      }
+    },
+    {
+      "query": "Get the weather for 40.4168,-3.7038 for today.",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "40.4168,-3.7038",
+        "time": "today"
+      }
+    },
+    {
+      "query": "Is it going to be windy in Istanbul next week?",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Istanbul",
+        "time": "next week"
+      }
+    },
+    {
+      "query": "What's the weather forecast for Rome for the next 3 days?",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Rome",
+        "time": "today",
+        "forecast_days": 3
+      }
+    },
+    {
+      "query": "Tell me the current weather in Chicago.",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Chicago",
+        "time": "now"
+      }
+    },
+    {
+      "query": "What's the temperature in London on New Year's Eve?",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "London",
+        "time": "New Year's Eve"
+      }
+    },
+    {
+      "query": "I need the weather for San Francisco for the next 2 days.",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "San Francisco",
+        "time": "today",
+        "forecast_days": 2
+      }
+    },
+    {
+      "query": "Will it be foggy in Paris tomorrow morning?",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Paris",
+        "time": "tomorrow morning"
+      }
+    },
+    {
+      "query": "What's the weather like in Toronto on August 15th?",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Toronto",
+        "time": "2024-08-15"
+      }
+    },
+    {
+      "query": "Get the weather for 34.0522,-118.2437 for the next 3 days.",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "34.0522,-118.2437",
+        "time": "today",
+        "forecast_days": 3
+      }
+    },
+    {
+      "query": "Is it going to rain in Tokyo next week?",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Tokyo",
+        "time": "next week"
+      }
+    },
+    {
+      "query": "What's the weather forecast for Istanbul for the next 24 hours?",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Istanbul",
+        "time": "now",
+        "forecast_days": 1
+      }
+    },
+    {
+      "query": "Tell me the current weather in Moscow.",
+      "function_name": "get_weather",
+      "arguments": {
+        "location": "Moscow",
+        "time": "now"
+      }
+    },
+    {
+      "

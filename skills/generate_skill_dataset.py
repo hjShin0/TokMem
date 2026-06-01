@@ -12,7 +12,7 @@ The generated dataset follows the format:
     "instruction": "Using {skill_name} functions, get correct result with given query",
     "query": "{user_query}",
     "tasks": ["{skillTask}"],
-    "responses": ["{\"function_name\": \"...\", \"arguments\": {...}}"]
+    "responses": ["{'function_name': '...', 'arguments': {...}}"]
 }
 """
 
@@ -20,7 +20,7 @@ import os
 import json
 import argparse
 import re
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Tuple
 from pathlib import Path
 import hashlib
 
@@ -77,106 +77,101 @@ def extract_skill_info(markdown_content: str) -> Dict[str, Any]:
     return info
 
 
-def generate_llm_prompt(skill_info: Dict[str, Any], num_samples: int = 5) -> str:
-    """Generate a prompt for the LLM to create query-response pairs."""
-    
+def generate_llm_prompt_batch(skill_infos: List[Dict[str, Any]], num_samples: int = 5) -> str:
+    """Generate a single prompt covering multiple skills to minimize API requests."""
+
+    skill_blocks = []
+    for idx, info in enumerate(skill_infos, 1):
+        skill_blocks.append(
+            f"""### Skill {idx}: {info['name']}
+
+- **Skill ID:** `{info['id']}`
+- **Description:** {info['description']}
+- **Trigger Keywords:** {', '.join(info['triggers'])}
+- **Available Functions (Verbs):** {', '.join(info['verbs'])}
+
+#### Full Documentation
+{info['full_content']}
+"""
+        )
+    skills_section = "\n---\n".join(skill_blocks)
+    skill_ids = [info['id'] for info in skill_infos]
+    keys_hint = ', '.join(f'"{sid}"' for sid in skill_ids)
+
     prompt = f"""You are a dataset generation assistant. Your task is to create training data for a skill-based AI assistant.
 
-## Skill Information
+You are given **{len(skill_infos)} skills**. For **each skill**, generate **{num_samples} diverse hypothetical user queries** along with the corresponding function call.
 
-**Skill ID:** {skill_info['id']}
-**Skill Name:** {skill_info['name']}
-**Skill Description:** {skill_info['description']}
-**Trigger Keywords:** {', '.join(skill_info['triggers'])}
-**Available Functions (Verbs):** {', '.join(skill_info['verbs'])}
+## Skills
 
-## Full Skill Documentation
+{skills_section}
 
-{skill_info['full_content']}
+## Output Format
 
-## Task
+Respond with a SINGLE valid JSON object. Its keys MUST be the skill IDs listed below, and each value MUST be an array of exactly {num_samples} samples.
 
-Generate {num_samples} diverse hypothetical user queries that would require using this skill. For each query, provide the corresponding function call that the AI assistant should make.
+Skill ID keys (use these verbatim): {keys_hint}
 
-### Output Format
-
-You must respond with a valid JSON array. Each element must have this exact structure:
+Schema:
 
 ```json
-[
-  {{
-    "query": "A realistic user request that requires this skill",
-    "function_name": "the exact function/verb name from the skill documentation",
-    "arguments": {{
-      "param1": "value1",
-      "param2": "value2"
+{{
+  "<skill_id>": [
+    {{
+      "query": "A realistic user request that requires this skill",
+      "function_name": "the exact function/verb name from the skill documentation",
+      "arguments": {{ "param1": "value1" }}
     }}
-  }}
-]
+  ]
+}}
 ```
 
-### Requirements
+## Requirements
 
-1. **query**: Must be a natural, realistic user request (not a command). It should be something a real user would say when they need this skill.
-2. **function_name**: Must match one of the available functions listed above.
-3. **arguments**: Must contain the parameters needed for that function call, based on the skill documentation.
-
-### Example Output Format (for a weather skill)
-
-```json
-[
-  {{
-    "query": "What's the weather like in Seoul today?",
-    "function_name": "current",
-    "arguments": {{
-      "location": "Seoul"
-    }}
-  }},
-  {{
-    "query": "Will it rain in Paris tomorrow?",
-    "function_name": "forecast",
-    "arguments": {{
-      "location": "Paris,France"
-    }}
-  }}
-]
-```
-
-Now, generate {num_samples} diverse query-response pairs for the {skill_info['name']} skill. Make sure the queries are varied and cover different use cases of the skill."""
+1. **query**: A natural, realistic user request (not a command) — something a real user would actually say.
+2. **function_name**: Must match one of the available functions for the corresponding skill.
+3. **arguments**: Must contain the parameters needed for that function call based on the skill documentation.
+4. Each skill must have exactly {num_samples} diverse samples covering different use cases of that skill.
+5. Return ONLY the JSON object — no surrounding prose. Code fences are optional.
+"""
 
     return prompt
 
 
-def call_llm_api(prompt: str, api_key: str, model: str = "gpt-4o-mini") -> str:
-    """Call the LLM API to generate responses.
-    
-    This function supports multiple LLM providers:
-    - OpenAI (default)
-    - You can extend this to support other providers
-    """
+def call_llm_api(
+    prompt: str,
+    api_key: str,
+    model: str = "gemini-2.0-flash",
+    max_output_tokens: int = 4096,
+) -> str:
+    """Call the Google Gemini API to generate responses."""
     import urllib.request
     import urllib.error
-    
-    # Using OpenAI API format
-    url = "https://api.openai.com/v1/chat/completions"
-    
+
+    url = (
+        f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
+        f"?key={api_key}"
+    )
+
     headers = {
         "Content-Type": "application/json",
-        "Authorization": f"Bearer {api_key}"
     }
-    
+
     payload = {
-        "model": model,
-        "messages": [
+        "contents": [
             {
                 "role": "user",
-                "content": prompt
+                "parts": [{"text": prompt}],
             }
         ],
-        "temperature": 0.7,
-        "max_tokens": 2000
+        "generationConfig": {
+            "temperature": 0.7,
+            "maxOutputTokens": max_output_tokens,
+            "topP": 0.95,
+            "topK": 40,
+        },
     }
-    
+
     try:
         req = urllib.request.Request(
             url,
@@ -184,11 +179,20 @@ def call_llm_api(prompt: str, api_key: str, model: str = "gpt-4o-mini") -> str:
             headers=headers,
             method='POST'
         )
-        
+
         with urllib.request.urlopen(req, timeout=60) as response:
             result = json.loads(response.read().decode('utf-8'))
-            return result['choices'][0]['message']['content']
-    
+
+        candidates = result.get('candidates') or []
+        if not candidates:
+            raise Exception(f"Gemini returned no candidates: {result}")
+
+        parts = candidates[0].get('content', {}).get('parts') or []
+        text_chunks = [p.get('text', '') for p in parts if 'text' in p]
+        if not text_chunks:
+            raise Exception(f"Gemini response had no text parts: {result}")
+        return ''.join(text_chunks)
+
     except urllib.error.HTTPError as e:
         error_body = e.read().decode('utf-8') if e.fp else ""
         raise Exception(f"API request failed with status {e.code}: {error_body}")
@@ -196,20 +200,49 @@ def call_llm_api(prompt: str, api_key: str, model: str = "gpt-4o-mini") -> str:
         raise Exception(f"Failed to call LLM API: {str(e)}")
 
 
-def parse_llm_response(response: str) -> List[Dict[str, Any]]:
-    """Parse the LLM response to extract query-response pairs."""
-    
-    # Try to find JSON array in the response
-    json_match = re.search(r'\[\s*\{.*?\}\s*\]', response, re.DOTALL)
-    if json_match:
-        try:
-            return json.loads(json_match.group(0))
-        except json.JSONDecodeError:
-            pass
-    
-    # If no JSON found, try to parse line by line
-    items = []
-    return items
+def _strip_code_fences(text: str) -> str:
+    """Strip a leading ```json / ``` and trailing ``` from a Gemini response, if present."""
+    stripped = text.strip()
+    fence_match = re.match(r'^```(?:json)?\s*(.*?)\s*```\s*$', stripped, re.DOTALL)
+    if fence_match:
+        return fence_match.group(1).strip()
+    return stripped
+
+
+def parse_llm_response_batch(response: str) -> Dict[str, List[Dict[str, Any]]]:
+    """Parse a batched Gemini response into {skill_id: [sample, ...]}.
+
+    Accepts the response with or without ```json fences. Items missing
+    `query` or `function_name` are dropped silently.
+    """
+    candidate = _strip_code_fences(response)
+
+    parsed: Any = None
+    try:
+        parsed = json.loads(candidate)
+    except json.JSONDecodeError:
+        # Fallback: locate the outermost JSON object in the text.
+        obj_match = re.search(r'\{.*\}', candidate, re.DOTALL)
+        if obj_match:
+            try:
+                parsed = json.loads(obj_match.group(0))
+            except json.JSONDecodeError:
+                parsed = None
+
+    if not isinstance(parsed, dict):
+        return {}
+
+    cleaned: Dict[str, List[Dict[str, Any]]] = {}
+    for skill_id, items in parsed.items():
+        if not isinstance(items, list):
+            continue
+        valid = [
+            it for it in items
+            if isinstance(it, dict) and 'query' in it and 'function_name' in it
+        ]
+        if valid:
+            cleaned[skill_id] = valid
+    return cleaned
 
 
 def format_for_natural_instructions(
@@ -246,85 +279,138 @@ def format_for_natural_instructions(
     return formatted_data
 
 
-def generate_dataset_for_skill(
-    md_path: str, 
-    api_key: str, 
+def _estimate_max_output_tokens(num_skills: int, num_samples: int) -> int:
+    """Roughly estimate output token budget for a batch.
+
+    ~200 tokens per sample, with a floor of 1024 and a cap of 8192
+    (the maxOutputTokens limit for Gemini 2.0 Flash).
+    """
+    estimate = num_skills * num_samples * 200
+    return max(1024, min(estimate + 512, 8192))
+
+
+def generate_dataset_for_batch(
+    skill_md_paths: List[str],
+    api_key: str,
     model: str,
     num_samples: int = 5,
-    output_dir: str = "generated_datasets"
-) -> Dict[str, Any]:
-    """Generate dataset for a single skill."""
-    
-    print(f"\n📄 Processing skill: {md_path}")
-    
-    # Load and parse skill markdown
-    markdown_content = load_skill_markdown(md_path)
-    skill_info = extract_skill_info(markdown_content)
-    
-    print(f"   Skill: {skill_info['name']} ({skill_info['id']})")
-    print(f"   Functions: {skill_info['verbs']}")
-    
-    # Generate LLM prompt
-    prompt = generate_llm_prompt(skill_info, num_samples)
-    
-    # Call LLM API
-    print(f"   Calling LLM API ({model})...")
+    output_dir: str = "generated_datasets",
+) -> List[Dict[str, Any]]:
+    """Generate datasets for a batch of skills in a SINGLE Gemini request."""
+
+    # Load and parse skill markdown files in the batch
+    batch_infos: List[Dict[str, Any]] = []
+    for md_path in skill_md_paths:
+        markdown_content = load_skill_markdown(md_path)
+        info = extract_skill_info(markdown_content)
+        info['_md_path'] = md_path
+        batch_infos.append(info)
+
+    print(f"\n📦 Batch of {len(batch_infos)} skills:")
+    for info in batch_infos:
+        print(f"   - {info['name']} ({info['id']})  verbs: {info['verbs']}")
+
+    prompt = generate_llm_prompt_batch(batch_infos, num_samples)
+    max_tokens = _estimate_max_output_tokens(len(batch_infos), num_samples)
+
+    print(f"   Calling Gemini API ({model}, max_output_tokens={max_tokens})...")
     try:
-        llm_response = call_llm_api(prompt, api_key, model)
+        llm_response = call_llm_api(prompt, api_key, model, max_output_tokens=max_tokens)
+        print(llm_response)
     except Exception as e:
         print(f"   ❌ Error calling LLM: {e}")
-        return {
-            'skill_name': skill_info['name'],
-            'success': False,
-            'error': str(e),
-            'data': []
-        }
-    
-    # Parse response
-    parsed_items = parse_llm_response(llm_response)
-    
-    if not parsed_items:
+        return [
+            {
+                'skill_name': info['name'],
+                'skill_id': info['id'],
+                'success': False,
+                'error': str(e),
+                'data': [],
+            }
+            for info in batch_infos
+        ]
+
+    parsed_by_skill = parse_llm_response_batch(llm_response)
+
+    if not parsed_by_skill:
         print(f"   ⚠️  No valid items parsed from LLM response")
-        # Save raw response for debugging
-        debug_file = os.path.join(output_dir, f"{skill_info['name'].lower()}_raw_response.txt")
+        batch_label = '_'.join(info['name'].lower().replace(' ', '') for info in batch_infos)[:60]
+        debug_file = os.path.join(output_dir, f"batch_{batch_label}_raw_response.txt")
         with open(debug_file, 'w', encoding='utf-8') as f:
             f.write(llm_response)
-        return {
-            'skill_name': skill_info['name'],
-            'success': False,
-            'error': 'No valid items parsed',
-            'data': [],
-            'raw_response': llm_response
-        }
-    
-    print(f"   ✅ Parsed {len(parsed_items)} items")
-    
-    # Format for NaturalInstructionsTaskDataset
-    formatted_data = format_for_natural_instructions(parsed_items, skill_info)
-    
-    return {
-        'skill_name': skill_info['name'],
-        'skill_id': skill_info['id'],
-        'success': True,
-        'data': formatted_data,
-        'num_samples': len(formatted_data)
-    }
+        return [
+            {
+                'skill_name': info['name'],
+                'skill_id': info['id'],
+                'success': False,
+                'error': 'No valid items parsed',
+                'data': [],
+            }
+            for info in batch_infos
+        ]
+
+    results: List[Dict[str, Any]] = []
+    for info in batch_infos:
+        items = parsed_by_skill.get(info['id'], [])
+        if not items:
+            print(f"   ⚠️  {info['name']}: skill missing from batched response")
+            results.append({
+                'skill_name': info['name'],
+                'skill_id': info['id'],
+                'success': False,
+                'error': 'Skill missing from batched response',
+                'data': [],
+            })
+            continue
+
+        # Save items in their raw {query, function_name, arguments} shape.
+        # The training-side loader (atomic/main_custom_weather.py :: load_skill_datasets)
+        # converts these into the instruction/tasks/responses format at load time.
+        raw_data = [
+            {
+                'query': it['query'],
+                'function_name': it['function_name'],
+                'arguments': it.get('arguments', {}),
+            }
+            for it in items
+        ]
+        print(f"   ✅ {info['name']}: {len(raw_data)} samples")
+        results.append({
+            'skill_name': info['name'],
+            'skill_id': info['id'],
+            'success': True,
+            'data': raw_data,
+            'num_samples': len(raw_data),
+        })
+
+    return results
 
 
-def save_dataset(all_data: List[Dict[str, Any]], output_path: str):
-    """Save the generated dataset to a JSON file."""
-    
-    # Flatten all data
-    flat_data = []
+def save_dataset(
+    all_data: List[Dict[str, Any]],
+    output_path: str,
+    existing_data: Optional[List[Dict[str, Any]]] = None,
+):
+    """Save the generated dataset to a JSON file, appending to existing data."""
+
+    if existing_data is None:
+        existing_data = []
+
+    # Flatten new data from this run
+    new_data = []
     for skill_result in all_data:
         if skill_result.get('success') and skill_result.get('data'):
-            flat_data.extend(skill_result['data'])
-    
-    # Save as JSON
+            new_data.extend(skill_result['data'])
+
+    combined_data = existing_data + new_data
+
     with open(output_path, 'w', encoding='utf-8') as f:
-        json.dump(flat_data, f, indent=2, ensure_ascii=False)
-    
-    print(f"\n💾 Saved {len(flat_data)} total samples to {output_path}")
+        json.dump(combined_data, f, indent=2, ensure_ascii=False)
+
+    print(
+        f"\n💾 Appended {len(new_data)} new samples "
+        f"(existing {len(existing_data)}, total {len(combined_data)}) to {output_path}"
+    )
 
 
 def load_existing_dataset(output_path: str) -> List[Dict[str, Any]]:
@@ -345,10 +431,13 @@ def main():
                         help='Output filename for the combined dataset')
     parser.add_argument('--num_samples', type=int, default=5,
                         help='Number of samples to generate per skill')
+    parser.add_argument('--batch_size', type=int, default=5,
+                        help='Number of skills to bundle into a SINGLE Gemini request '
+                             '(higher = fewer requests, but larger prompt/response). Default: 5')
     parser.add_argument('--api_key', type=str, default=None,
-                        help='OpenAI API key (or set OPENAI_API_KEY env var)')
-    parser.add_argument('--model', type=str, default='gpt-4o-mini',
-                        help='LLM model to use')
+                        help='Gemini API key (or set GEMINI_API_KEY / GOOGLE_API_KEY env var)')
+    parser.add_argument('--model', type=str, default='gemini-2.0-flash',
+                        help='Gemini model to use (e.g. gemini-2.0-flash, gemini-1.5-flash, gemini-2.0-pro)')
     parser.add_argument('--skills', type=str, nargs='*', default=None,
                         help='Specific skill files to process (default: all .md files)')
     parser.add_argument('--resume', action='store_true',
@@ -356,11 +445,15 @@ def main():
     
     args = parser.parse_args()
     
-    # Get API key
-    api_key = args.api_key or os.environ.get('OPENAI_API_KEY')
+    # Get API key (Gemini)
+    api_key = (
+        args.api_key
+        or os.environ.get('GEMINI_API_KEY')
+        or os.environ.get('GOOGLE_API_KEY')
+    )
     if not api_key:
-        print("❌ Error: OPENAI_API_KEY environment variable not set and --api_key not provided")
-        print("   Please set OPENAI_API_KEY or provide --api_key")
+        print("❌ Error: GEMINI_API_KEY / GOOGLE_API_KEY environment variable not set and --api_key not provided")
+        print("   Please set GEMINI_API_KEY (or GOOGLE_API_KEY) or provide --api_key")
         return
     
     # Create output directory
@@ -369,12 +462,12 @@ def main():
     # Output file path
     output_path = os.path.join(args.output_dir, args.output_file)
     
-    # Load existing dataset if resuming
+    # Always load existing dataset so new runs append rather than overwrite
     existing_data = []
-    if args.resume and os.path.exists(output_path):
+    if os.path.exists(output_path):
         print(f"📂 Loading existing dataset from {output_path}")
         existing_data = load_existing_dataset(output_path)
-        print(f"   Found {len(existing_data)} existing samples")
+        print(f"   Found {len(existing_data)} existing samples — new samples will be appended")
     
     # Find skill files
     skills_dir = Path(args.skills_dir)
@@ -391,20 +484,29 @@ def main():
     for sf in skill_files:
         print(f"   - {sf.name}")
     
-    # Process each skill
-    all_results = []
-    for skill_file in skill_files:
-        result = generate_dataset_for_skill(
-            md_path=str(skill_file),
+    # Chunk skills into batches so each Gemini call covers multiple skills
+    batch_size = max(1, args.batch_size)
+    batches = [
+        skill_files[i:i + batch_size]
+        for i in range(0, len(skill_files), batch_size)
+    ]
+    print(f"\n🧮 Will send {len(batches)} Gemini request(s) "
+          f"(batch_size={batch_size}, {args.num_samples} samples/skill)")
+
+    all_results: List[Dict[str, Any]] = []
+    for batch_idx, batch in enumerate(batches, 1):
+        print(f"\n=== Batch {batch_idx}/{len(batches)} ===")
+        batch_results = generate_dataset_for_batch(
+            skill_md_paths=[str(sf) for sf in batch],
             api_key=api_key,
             model=args.model,
             num_samples=args.num_samples,
-            output_dir=args.output_dir
+            output_dir=args.output_dir,
         )
-        all_results.append(result)
-        
-        # Save intermediate results
-        save_dataset(all_results, output_path)
+        all_results.extend(batch_results)
+
+        # Save intermediate results after each batch (appended to existing data)
+        save_dataset(all_results, output_path, existing_data=existing_data)
     
     # Summary
     print("\n" + "=" * 50)

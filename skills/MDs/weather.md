@@ -2,7 +2,7 @@
 id: com.argo.weather
 name: Weather
 version: "1.0.0"
-description: Get current weather and forecasts via wttr.in
+description: Get weather information for a location and time via wttr.in
 author: argo
 tool_refs: [http_fetch]
 tools: []
@@ -11,7 +11,7 @@ triggers: [weather, temperature, forecast, rain, snow]
 
 # Weather Skill
 
-Fetch current conditions and multi-day forecasts using the free wttr.in JSON API. No API key required.
+Fetch weather information using a single unified function. The API uses the free wttr.in JSON API. No API key required.
 
 ## Authentication
 
@@ -20,75 +20,54 @@ None. Include a descriptive `User-Agent` header as a courtesy:
 User-Agent: argo/1.0
 ```
 
-## Location Formats
+## Function
 
-| Format | Example |
-|--------|---------|
-| City name | `London`, `Seoul`, `New+York` |
-| lat,lon | `51.5,-0.12` |
-| Airport IATA | `JFK` |
-| IP-based (current location) | leave blank or use `~` |
+### get_weather
 
-URL-encode spaces as `+` or `%20`.
+Get weather information for a specific location and time.
 
-## Verbs
-
-### current
-Get current conditions for a location.
-
-```
-GET https://wttr.in/{location}?format=j1
-Headers: User-Agent: argo/1.0
+```python
+get_weather(location: str, time: str, forecast_days: int = 0) -> dict
 ```
 
-Key fields from `current_condition[0]`:
+#### Arguments
 
-| Field | Description |
-|-------|-------------|
-| `temp_C` / `temp_F` | Current temperature |
-| `FeelsLikeC` / `FeelsLikeF` | Feels-like temperature |
-| `weatherDesc[0].value` | Text description, e.g. "Partly cloudy" |
-| `humidity` | Relative humidity % |
-| `windspeedKmph` | Wind speed in km/h |
-| `winddirDegree` | Wind direction in degrees |
-| `winddir16Point` | Wind direction as compass point, e.g. "NNE" |
-| `precipMM` | Precipitation in mm |
-| `visibility` | Visibility in km |
-| `uvIndex` | UV index |
-| `pressure` | Pressure in hPa |
-| `cloudcover` | Cloud cover % |
+| Argument | Type | Required | Default | Description |
+|----------|------|----------|---------|-------------|
+| `location` | str | Yes | - | Location to get weather for (e.g., "Seoul", "New+York", "51.5,-0.12") |
+| `time` | str | Yes | - | Time to get weather for (e.g., "2024-01-15", "now", "today") |
+| `forecast_days` | int | No | 0 | Number of days to forecast (0 = current weather only, 1-3 = forecast) |
 
-Also includes `nearest_area[0]` with `areaName`, `country`, `region`, `latitude`, `longitude`.
+#### Behavior
 
-### forecast
-Get a 3-day forecast (today + 2 more days). Same endpoint and response as `current` — the forecast lives in the `weather[]` array.
+- **Current weather** (`forecast_days=0` or omitted): Returns current conditions for the given location and time.
+  ```python
+  get_weather("Seoul", "2024-01-15")
+  # or
+  get_weather("Seoul", "now")
+  ```
 
+- **Forecast** (`forecast_days > 0`): Returns forecast for the specified number of days (max 3).
+  ```python
+  get_weather("Seoul", "2024-01-15", forecast_days=3)
+  # Returns forecast for Jan 15, 16, 17
+  ```
+
+## Examples
+
+```python
+# Current weather in Seoul
+get_weather("Seoul", "now")
+
+# Current weather in New York
+get_weather("New+York", "2024-01-15")
+
+# 3-day forecast starting from today
+get_weather("Seoul", "today", forecast_days=3)
+
+# Weather at specific coordinates
+get_weather("51.5,-0.12", "2024-06-01")
 ```
-GET https://wttr.in/{location}?format=j1
-Headers: User-Agent: argo/1.0
-```
-
-Each element of `weather[]`:
-
-| Field | Description |
-|-------|-------------|
-| `date` | YYYY-MM-DD |
-| `maxtempC` / `mintempC` | Day high/low in °C |
-| `maxtempF` / `mintempF` | Day high/low in °F |
-| `uvIndex` | Peak UV index |
-| `hourly[]` | Array of 8 3-hour slots |
-
-Each `hourly` slot has `time` (0–2100 in steps of 300), `tempC`, `FeelsLikeC`, `weatherDesc[0].value`, `precipMM`, `chanceofrain`, `chanceofsnow`, `windspeedKmph`.
-
-### ascii
-Get a human-readable ASCII art weather report (not JSON).
-
-```
-GET https://wttr.in/{location}
-Headers: User-Agent: argo/1.0
-```
-
-Useful for embedding in plain-text messages. Add `?format=3` for a one-liner like `Seoul: ⛅  +18°C`.
 
 ## Error Handling
 
